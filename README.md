@@ -6,22 +6,22 @@
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red.svg)](https://pytorch.org/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-## 🎯 Overview
+##  Overview
 
 An intelligent computer vision system that monitors retail store conditions by analyzing camera images to detect cleanliness issues, merchandise problems, and safety hazards. Uses state-of-the-art vision-language models (LLaVA, Moondream, Gemini) for human-like visual understanding with explainable decisions.
 
 **Key Achievement:** Improved detection accuracy from 60% to 95% while reducing false positives from 30% to <5%.
 
-## ✨ Features
+##  Features
 
-- 🧹 **Intelligent Cleanliness Monitoring** - Detects debris, spills, stains with 90%+ accuracy
-- 📦 **Merchandise Management** - Identifies fallen products, empty shelves, misplaced items
-- 🧠 **Contextual Decision Making** - Adapts standards based on space type, traffic, store tier
-- 🔍 **Explainable AI** - Provides reasoning for every decision
-- ⚡ **Flexible Deployment** - Cloud API, local models, or hybrid approach
-- 💰 **Cost Optimized** - Local deployment eliminates API costs ($0 vs $60/month)
+-  **Intelligent Cleanliness Monitoring** - Detects debris, spills, stains with 90%+ accuracy
+-  **Merchandise Management** - Identifies fallen products, empty shelves, misplaced items
+-  **Contextual Decision Making** - Adapts standards based on space type, traffic, store tier
+-  **Explainable AI** - Provides reasoning for every decision
+- **Flexible Deployment** - Cloud API, local models, or hybrid approach
+-  **Cost Optimized** - Local deployment eliminates API costs ($0 vs $60/month)
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Option 1: Cloud API (Fastest Setup)
 ```bash
@@ -41,7 +41,7 @@ pip install ultralytics opencv-python langchain-google-genai
 python retail_monitor_improved.py
 ```
 
-## 📊 Performance
+## Performance
 
 | Metric | Traditional CV | This System |
 |--------|---------------|-------------|
@@ -57,7 +57,7 @@ python retail_monitor_improved.py
 - **Framework:** PyTorch, LangChain, Transformers
 - **Optimization:** 4-bit quantization, CUDA acceleration
 
-## 🎓 Technical Highlights
+##  Technical Highlights
 
 1. **Hybrid Architecture** - Combines CV speed with LLM reasoning
 2. **Model Quantization** - Runs on 6GB consumer GPU
@@ -65,7 +65,7 @@ python retail_monitor_improved.py
 4. **Robust Parsing** - Handles variable LLM response formats
 5. **Multi-Deployment** - Same code for cloud/local/hybrid
 
-## 💡 Use Cases
+## Use Cases
 
 - Retail chain quality assurance
 - Automated facility management
@@ -73,41 +73,24 @@ python retail_monitor_improved.py
 - Compliance documentation
 - Resource optimization
 
-## 📈 Business Impact
+##  Business Impact
 
 - **40% faster** issue resolution
 - **$720/year** savings per 10k images (local vs API)
 - **24/7 monitoring** without manual oversight
 - **Automated audit trails** for compliance
 
-## 🔧 Hardware Requirements
+##  Hardware Requirements
 
 - **Minimum:** Any CPU (Moondream)
 - **Recommended:** NVIDIA GPU 6GB+ (LLaVA)
 - **Optimal:** NVIDIA GPU 8GB+ (LLaVA full)
 
-## 📚 Documentation
+##  Documentation
 
 - [Installation Guide](docs/INSTALLATION.md)
 - [Model Comparison](docs/MODEL_COMPARISON.md)
 - [API Reference](docs/API.md)
 - [Deployment Guide](docs/DEPLOYMENT.md)
 
-## 🤝 Contributing
 
-Contributions welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md)
-
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE)
-
-## 👤 Author
-
-[Your Name](https://github.com/yourusername)
-
-## 🙏 Acknowledgments
-
-- Ultralytics YOLO
-- HuggingFace Transformers
-- Google Gemini API
-- LLaVA Project
