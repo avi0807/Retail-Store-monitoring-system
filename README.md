@@ -1,96 +1,181 @@
-# 🏪 AI-Powered Store Monitoring System
+# Retail Store Monitoring System
 
-> Automated cleanliness and merchandise monitoring using Vision-Language Models
+[![CI](https://github.com/avi/Retail-Store-monitoring-system/actions/workflows/ci.yml/badge.svg)](https://github.com/avi/Retail-Store-monitoring-system/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-[![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red.svg)](https://pytorch.org/)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+Vision-language powered monitoring for retail stores. Connects to
+RTSP cameras (or processes images, video files, and folders), detects
+retail-relevant events with **YOLO-Worldv2** (open-vocabulary), and
+uses a vision LLM (Gemini by default) to produce structured
+cleanliness, merchandise, and alert decisions with explainable
+reasoning.
 
-##  Overview
+## Why this exists
 
-An intelligent computer vision system that monitors retail store conditions by analyzing camera images to detect cleanliness issues, merchandise problems, and safety hazards. Uses state-of-the-art vision-language models (LLaVA, Moondream, Gemini) for human-like visual understanding with explainable decisions.
+Generic COCO-trained detectors like `yolov8n` only know 80 classes,
+none of which are "spill", "trash on floor", or "fallen product".
+This system swaps in **YOLO-World**, an open-vocabulary detector that
+accepts a retail-specific class list at runtime, then hands the
+detections plus the image to a vision LLM for spatial reasoning and
+prioritized alerting.
 
-**Key Achievement:** Improved detection accuracy from 60% to 95% while reducing false positives from 30% to <5%.
+## Features
 
-##  Features
+- **Open-vocabulary detection** with YOLO-Worldv2 (`yolov8s-worldv2.pt`),
+  with automatic fallback to YOLOv8m.
+- **RTSP support** with a threaded reader, automatic reconnect, and
+  credential-safe logging.
+- **Pluggable analyzers** behind a single `VisionAnalyzer` protocol:
+  - `gemini` — Google Gemini 3.5 Flash (cloud, default).
+  - `qwen` — Qwen2.5-VL-7B-Instruct via Hugging Face Transformers
+    (local, fully offline; install with `pip install '.[local]'`).
+  - `stub` — deterministic offline analyzer for tests, CI, and demos
+    without an API key.
+- **HTTP API** built on FastAPI, plus a CLI.
+- **SQLite incident store** for audit trails.
+- **Alert dispatch** to console + webhook (Slack, PagerDuty, etc.)
+  with priority thresholds.
+- **Containerized** with Dockerfile + Compose for API and per-camera
+  RTSP workers.
+- **Tested**: pytest suite that runs offline (no API key required).
 
--  **Intelligent Cleanliness Monitoring** - Detects debris, spills, stains with 90%+ accuracy
--  **Merchandise Management** - Identifies fallen products, empty shelves, misplaced items
--  **Contextual Decision Making** - Adapts standards based on space type, traffic, store tier
--  **Explainable AI** - Provides reasoning for every decision
-- **Flexible Deployment** - Cloud API, local models, or hybrid approach
--  **Cost Optimized** - Local deployment eliminates API costs ($0 vs $60/month)
+## Architecture
 
-##  Quick Start
-
-### Option 1: Cloud API (Fastest Setup)
-```bash
-pip install opencv-python numpy langchain-google-genai
-python retail_monitor_pure_vision.py
+```
+RTSP / image / video → YOLO-World detector → Vision LLM analyzer
+                                ↓                       ↓
+                           detections          cleanliness / merchandise
+                                                    / alert decision
+                                ↓                       ↓
+                          SQLite store          alert sinks (log, webhook)
 ```
 
-### Option 2: Local Model (Zero Cost)
+See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the full picture.
+
+## Install
+
 ```bash
-pip install transformers torch opencv-python
-python retail_monitor_local.py
+git clone https://github.com/avi/Retail-Store-monitoring-system.git
+cd Retail-Store-monitoring-system
+python -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install -e ".[api]"
+cp .env.example .env                # then add your GEMINI_API_KEY
 ```
 
-### Option 3: Hybrid (Best Performance)
+For the local Qwen2.5-VL backend (no cloud calls):
+
 ```bash
-pip install ultralytics opencv-python langchain-google-genai
-python retail_monitor_improved.py
+pip install -e ".[api,local]"
+# then in configs/default.yaml:
+#   llm:
+#     provider: qwen
+#     model: Qwen/Qwen2.5-VL-7B-Instruct
 ```
 
-## Performance
+## Quick start
 
-| Metric | Traditional CV | This System |
-|--------|---------------|-------------|
-| Clean Detection | 60% | **95%** |
-| Dirty Detection | 50% | **90%** |
-| False Positives | 30% | **<5%** |
-| Processing Speed | N/A | **3-10s** |
+### Single image
 
-## 🛠️ Technical Stack
+```bash
+retail-monitor analyze-image media/aisle.jpg --space aisle --traffic high
+```
 
-- **Computer Vision:** YOLO v8, OpenCV
-- **AI Models:** Gemini Vision, LLaVA, Moondream
-- **Framework:** PyTorch, LangChain, Transformers
-- **Optimization:** 4-bit quantization, CUDA acceleration
+### Folder of images
 
-##  Technical Highlights
+```bash
+retail-monitor analyze-folder media/ --mode cleanliness
+```
 
-1. **Hybrid Architecture** - Combines CV speed with LLM reasoning
-2. **Model Quantization** - Runs on 6GB consumer GPU
-3. **Adaptive Sampling** - Intelligent frame selection for videos
-4. **Robust Parsing** - Handles variable LLM response formats
-5. **Multi-Deployment** - Same code for cloud/local/hybrid
+### Video file
 
-## Use Cases
+```bash
+retail-monitor analyze-video media/walkthrough.mp4 --frame-skip 90
+```
 
-- Retail chain quality assurance
-- Automated facility management
-- Safety hazard detection
-- Compliance documentation
-- Resource optimization
+### Live RTSP camera
 
-##  Business Impact
+```bash
+retail-monitor stream "rtsp://user:pass@192.168.1.50:554/Streaming/Channels/101" \
+    --camera-id store-3-aisle-1 \
+    --space aisle \
+    --traffic high \
+    --interval 5
+```
 
-- **40% faster** issue resolution
-- **$720/year** savings per 10k images (local vs API)
-- **24/7 monitoring** without manual oversight
-- **Automated audit trails** for compliance
+The reader runs in a background thread and always serves the most
+recent frame, so analysis never falls behind. See
+[`docs/RTSP.md`](docs/RTSP.md) for vendor-specific URL formats and
+tuning tips.
 
-##  Hardware Requirements
+### HTTP API
 
-- **Minimum:** Any CPU (Moondream)
-- **Recommended:** NVIDIA GPU 6GB+ (LLaVA)
-- **Optimal:** NVIDIA GPU 8GB+ (LLaVA full)
+```bash
+retail-monitor serve --host 0.0.0.0 --port 8000
+# Then visit http://localhost:8000/docs for interactive Swagger UI.
 
-##  Documentation
+curl -F "file=@media/aisle.jpg" http://localhost:8000/analyze/image
+```
 
-- [Installation Guide](docs/INSTALLATION.md)
-- [Model Comparison](docs/MODEL_COMPARISON.md)
-- [API Reference](docs/API.md)
-- [Deployment Guide](docs/DEPLOYMENT.md)
+See [`docs/API.md`](docs/API.md) for the full endpoint reference.
+
+### Docker
+
+```bash
+cp .env.example .env                   # add GEMINI_API_KEY and RTSP_URL
+docker compose -f docker/docker-compose.yml up --build api
+docker compose -f docker/docker-compose.yml --profile rtsp up rtsp-worker
+```
+
+## Configuration
+
+Defaults live in `configs/default.yaml`. Override with `--config
+path/to.yaml` or `RETAIL_MONITOR_CONFIG=...`. Secrets come from `.env`.
+
+```yaml
+detector:
+  model: yolov8s-worldv2.pt
+  classes: [person, trash, spill, fallen product, cardboard box, ...]
+llm:
+  provider: gemini      # gemini | qwen | stub
+  model: gemini-3.5-flash
+stream:
+  sample_interval_seconds: 5.0
+alerts:
+  webhook_url: null
+  min_priority: medium
+```
+
+## Running tests
+
+```bash
+pip install -e ".[dev]"
+pytest
+```
+
+The test suite uses the offline `StubVisionAnalyzer` and a fake
+detector, so it runs with no network, no API key, and no GPU.
+
+## Project layout
+
+```
+src/retail_monitor/
+  analyzers/    # Gemini + stub VisionAnalyzer implementations
+  detectors/    # YOLO-World wrapper
+  io/           # RTSP, video file, image folder sources
+  models/       # Dataclasses and enums
+  services/     # SQLite store + alert sinks
+  api.py        # FastAPI service
+  cli.py        # `retail-monitor` entry point
+  config.py     # YAML + env config
+  factory.py    # Wires components together
+  pipeline.py   # Detector + analyzer + sinks orchestrator
+configs/        # Default YAML config
+docker/         # Dockerfile + compose
+docs/           # ARCHITECTURE, API, RTSP guides
+scripts/        # smoke_rtsp.py and other utilities
+tests/          # Offline pytest suite
+```
 
 

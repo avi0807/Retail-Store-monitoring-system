@@ -1,0 +1,43 @@
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: retail-monitor:latest
+    container_name: retail-monitor-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - ../.env
+    volumes:
+      - ../configs:/app/configs:ro
+      - retail_data:/app/data
+    environment:
+      RETAIL_MONITOR_CONFIG: /app/configs/default.yaml
+    command: ["retail-monitor", "serve", "--host", "0.0.0.0", "--port", "8000"]
+
+  rtsp-worker:
+    image: retail-monitor:latest
+    container_name: retail-monitor-rtsp
+    restart: unless-stopped
+    depends_on: [api]
+    env_file:
+      - ../.env
+    volumes:
+      - ../configs:/app/configs:ro
+      - retail_data:/app/data
+    environment:
+      RETAIL_MONITOR_CONFIG: /app/configs/default.yaml
+    # Override RTSP_URL in your .env, then run:
+    #   docker compose --profile rtsp up rtsp-worker
+    profiles: [rtsp]
+    command:
+      - retail-monitor
+      - stream
+      - ${RTSP_URL:-rtsp://example/stream}
+      - --camera-id=docker-cam-1
+      - --interval=5
+
+volumes:
+  retail_data:

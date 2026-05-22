@@ -1,0 +1,99 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "retail-monitor"
+version = "0.3.0"
+description = "Vision-language powered retail store monitoring system with RTSP support."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Avi" }]
+keywords = ["computer-vision", "retail", "yolo", "vlm", "rtsp", "monitoring"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Image Recognition",
+]
+
+dependencies = [
+    "opencv-python>=4.9",
+    "numpy>=1.26",
+    "ultralytics>=8.3",
+    "pyyaml>=6.0",
+    "python-dotenv>=1.0",
+    "requests>=2.31",
+    "langchain-core>=0.3",
+    "langchain-google-genai>=2.0",
+]
+
+[project.optional-dependencies]
+api = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.27",
+    "python-multipart>=0.0.9",
+]
+local = [
+    # Local Qwen2.5-VL backend. Heavy: ~6 GB of wheels.
+    "torch>=2.2",
+    "transformers>=4.49",
+    "accelerate>=0.30",
+    "pillow>=10.0",
+]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.4",
+    "black>=24.0",
+    "mypy>=1.10",
+    "fastapi>=0.110",
+    "httpx>=0.27",
+]
+
+[project.scripts]
+retail-monitor = "retail_monitor.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/avi/Retail-Store-monitoring-system"
+Issues = "https://github.com/avi/Retail-Store-monitoring-system/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+retail_monitor = ["py.typed"]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "C4"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests can use a few short names and skip noqa rules.
+"tests/*" = ["B011"]
+# api.py uses module-level FastAPI dependency objects intentionally.
+"src/retail_monitor/api.py" = ["B008"]
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
+warn_unused_ignores = true

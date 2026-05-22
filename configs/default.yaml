@@ -1,0 +1,65 @@
+# Default configuration for the retail monitoring system.
+# Override on the command line with --config or via the
+# RETAIL_MONITOR_CONFIG environment variable.
+
+log_level: INFO
+
+detector:
+  # YOLO-World is open-vocabulary so we can detect retail-specific
+  # concepts ("spill", "trash", "fallen product") without fine-tuning.
+  # If the weights aren't downloadable in your environment, the loader
+  # falls back to yolov8m.pt automatically.
+  model: yolov8s-worldv2.pt
+  fallback_model: yolov8m.pt
+  confidence: 0.25
+  iou_threshold: 0.45
+  device: auto    # auto | cpu | cuda | "0"
+  classes:
+    - person
+    - shopping cart
+    - trash
+    - spill
+    - cardboard box
+    - bottle
+    - bag
+    - fallen product
+    - wet floor sign
+    - shelf
+    - empty shelf
+    - broken glass
+
+llm:
+  provider: gemini       # gemini | qwen | stub
+  model: gemini-3.5-flash
+  temperature: 0.1
+  max_retries: 2
+  timeout_seconds: 30
+
+  # Local-model knobs (only used when provider == "qwen").
+  # Default model is Qwen/Qwen2.5-VL-7B-Instruct; override via `model` above.
+  local_device: auto       # auto | cpu | cuda | "0"
+  local_dtype: auto        # auto | float16 | bfloat16
+  load_in_4bit: false      # set true for ~6GB VRAM; needs bitsandbytes
+  max_new_tokens: 1024
+
+stream:
+  sample_interval_seconds: 5.0   # How often to analyze RTSP frames.
+  video_frame_skip: 60
+  reconnect_delay_seconds: 3.0
+  reader_buffer_frames: 1
+
+storage:
+  database_url: "sqlite:///./retail_monitor.db"
+  snapshot_dir: "./snapshots"
+  keep_snapshot_days: 14
+
+alerts:
+  webhook_url: null            # e.g. https://hooks.slack.com/services/...
+  min_priority: medium         # low | medium | high | critical
+  log_alerts: true
+
+api:
+  host: 0.0.0.0
+  port: 8000
+  cors_origins:
+    - "*"
